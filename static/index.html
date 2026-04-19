@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ARENA — Adversarial Reasoning Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080808;
+    --bg1: #0d0d0d;
+    --bg2: #111111;
+    --bg3: #161616;
+    --border: #1c1c1c;
+    --border2: #242424;
+    --orange: #ff6600;
+    --orange-dim: #ff660022;
+    --green: #00c176;
+    --red: #ff3b3b;
+    --blue: #4a9eff;
+    --yellow: #ffcc00;
+    --gray: #666666;
+    --text: #d4d4d4;
+    --text2: #888888;
+    --text3: #666666;
+    --marcus: #00c176;
+    --elena: #ff3b3b;
+    --dev: #4a9eff;
+    --zara: #888888;
+    --rohan: #ffcc00;
+    --synth: #ff6600;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', 'Courier New', 'Lucida Console', monospace;
+    font-size: 13px;
+    overflow: hidden;
+  }
+
+  /* ─── TOPBAR ─────────────────────────────────────── */
+  #topbar {
+    height: 44px;
+    background: var(--bg1);
+    border-bottom: 1px solid var(--orange);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 20px; }
+
+  .logo {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    color: var(--orange);
+  }
+
+  .tagline {
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--text3);
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+
+  .ticker-pill {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 5px 10px;
+    border-radius: 2px;
+    width: 160px;
+    outline: none;
+  }
+  .ticker-pill:focus { border-color: var(--orange); }
+
+  .run-btn {
+    background: var(--orange);
+    border: none;
+    color: #000;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    padding: 7px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .run-btn:hover { background: #ff8833; }
+
+  .clock { font-size: 9px; color: var(--text3); letter-spacing: 1px; }
+
+  /* ─── MAIN LAYOUT ────────────────────────────────── */
+  #app {
+    position: fixed;
+    top: 44px; bottom: 0;
+    left: 0; right: 0;
+    display: flex;
+  }
+
+  /* ─── LANDING ─────────────────────────────────────── */
+  #landing {
+    width: 100%; height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+  }
+
+  .land-logo {
+    font-size: 72px;
+    font-weight: 600;
+    letter-spacing: 24px;
+    color: var(--orange);
+    margin-bottom: 10px;
+    text-indent: 24px;
+  }
+
+  .land-sub {
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--text3);
+    margin-bottom: 48px;
+  }
+
+  .land-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .land-input {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 3px;
+    padding: 12px 18px;
+    border-radius: 2px;
+    width: 260px;
+    outline: none;
+    text-transform: uppercase;
+  }
+  .land-input:focus { border-color: var(--orange); }
+  .land-input::placeholder { color: var(--text3); font-size: 11px; letter-spacing: 2px; }
+
+  .land-run {
+    background: var(--orange);
+    border: none;
+    color: #000;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    padding: 14px 24px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .land-run:hover { background: #ff8833; }
+
+  .land-agents {
+    margin-top: 24px;
+    font-size: 8px;
+    color: var(--text3);
+    letter-spacing: 3px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .land-agent { opacity: 0.5; }
+  .land-agent.m { color: var(--marcus); opacity: 1; }
+  .land-agent.e { color: var(--elena); opacity: 1; }
+  .land-agent.d { color: var(--dev); opacity: 1; }
+  .land-agent.z { color: var(--zara); opacity: 1; }
+  .land-agent.r { color: var(--rohan); opacity: 1; }
+
+  /* ─── LOADING ─────────────────────────────────────── */
+  #loading {
+    width: 100%; height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .load-ticker {
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: 10px;
+    color: var(--orange);
+    margin-bottom: 6px;
+  }
+
+  .load-label {
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    margin-bottom: 32px;
+  }
+
+  .progress-track {
+    width: 400px;
+    height: 2px;
+    background: var(--bg3);
+    margin-bottom: 28px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--orange);
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  .load-steps { width: 400px; }
+
+  .load-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 0;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: var(--text3);
+    transition: color 0.3s;
+  }
+
+  .load-step.done { color: var(--green); }
+  .load-step.active { color: var(--orange); }
+
+  .step-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--bg3);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+
+  .load-step.done .step-dot { background: var(--green); }
+  .load-step.active .step-dot { background: var(--orange); animation: blink 0.8s infinite; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  /* ─── DEBATE LAYOUT ──────────────────────────────── */
+  #debate {
+    width: 100%;
+    height: 100%;
+  }
+
+  .debate-grid {
+    display: grid;
+    grid-template-columns: 230px 1fr 220px;
+    height: 100%;
+  }
+
+  /* ─── PANELS ─────────────────────────────────────── */
+  .panel {
+    height: 100%;
+    overflow-y: auto;
+    padding: 16px 14px;
+  }
+
+  .panel::-webkit-scrollbar { width: 2px; }
+  .panel::-webkit-scrollbar-track { background: var(--bg); }
+  .panel::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  .panel-left { border-right: 1px solid var(--border); }
+  .panel-right { border-left: 1px solid var(--border); }
+
+  /* ─── LEFT PANEL ─────────────────────────────────── */
+  .sec-label {
+    display: block;
+    font-size: 8px;
+    letter-spacing: 2.5px;
+    color: var(--orange);
+    margin: 14px 0 7px;
+    border-bottom: 1px solid var(--orange-dim);
+    padding-bottom: 4px;
+  }
+  .sec-label:first-child { margin-top: 0; }
+
+  .instrument-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 1px;
+  }
+
+  .instrument-co {
+    font-size: 9px;
+    color: var(--text3);
+    margin-top: 2px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+
+  .quality-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 8px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-top: 8px;
+    background: #1a1200;
+    border: 1px solid #3a2800;
+    color: #ffaa00;
+  }
+
+  .warn-item {
+    font-size: 8px;
+    color: var(--text3);
+    padding: 2px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  .warn-dot { color: var(--orange); margin-top: 1px; flex-shrink: 0; }
+
+  .data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 3px 0;
+    border-bottom: 1px solid #111;
+    font-size: 9px;
+  }
+
+  .dk { color: var(--text3) ; }
+  .dv { color: #e0e0e0; font-weight: 500; }
+  .dv.pos { color: var(--green); }
+  .dv.neg { color: var(--red); }
+  .dv.warn { color: var(--yellow); }
+  .dv.na { color: var(--text3); font-style: italic; }
+
+  .news-row {
+    padding: 4px 0;
+    border-bottom: 1px solid #111;
+    font-size: 8px;
+    color: var(--text3);
+    font-family: 'IBM Plex Sans', sans-serif;
+    line-height: 1.5;
+  }
+  .news-src { color: #333; }
+
+  /* ─── CENTER PANEL ───────────────────────────────── */
+  .round-divider {
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    text-align: center;
+    padding: 10px 0;
+    margin: 12px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .round-divider:first-child { margin-top: 0; border-top: none; }
+
+  .agent-card {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .agent-card:last-child { border-bottom: none; }
+
+  .agent-gutter {
+    width: 2px;
+    flex-shrink: 0;
+    border-radius: 1px;
+    margin-top: 3px;
+  }
+  .gutter-marcus { background: var(--marcus); }
+  .gutter-elena { background: var(--elena); }
+  .gutter-dev { background: var(--dev); }
+  .gutter-zara { background: var(--zara); }
+  .gutter-rohan { background: var(--rohan); }
+  .gutter-synth { background: var(--synth); }
+
+  .agent-body { flex: 1; }
+
+  .agent-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .agent-name-tag {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+  }
+  .name-marcus { color: var(--marcus); }
+  .name-elena { color: var(--elena); }
+  .name-dev { color: var(--dev); }
+  .name-zara { color: var(--zara); }
+  .name-rohan { color: var(--rohan); }
+  .name-synth { color: var(--synth); }
+
+  .agent-role-tag {
+    font-size: 8px;
+    color: var(--text3);
+    letter-spacing: 1px;
+  }
+
+  .agent-text {
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 12px;
+    color: #aaaaaa;
+    line-height: 1.7;
+  }
+
+  .synth-uq {
+    margin-top: 10px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px;
+    color: var(--orange);
+    font-style: italic;
+    border-top: 1px solid var(--orange-dim);
+    padding-top: 8px;
+  }
+
+  /* ─── RIGHT PANEL ────────────────────────────────── */
+  .temp-badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border-radius: 2px;
+    margin-bottom: 4px;
+  }
+  .tb-contested { background: #150800; border: 1px solid #3a1800; color: var(--orange); }
+  .tb-bull { background: #001508; border: 1px solid #003018; color: var(--green); }
+  .tb-bear { background: #150000; border: 1px solid #3a0000; color: var(--red); }
+
+  .polar-badge {
+    display: inline-block;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-bottom: 6px;
+    background: #100400;
+    border: 1px solid #2a0c00;
+    color: #cc4400;
+  }
+
+  .polar-index { font-size: 8px; color: var(--text3); margin-bottom: 4px; }
+  .dominant { font-size: 8px; color: var(--text3); margin-bottom: 10px; }
+  .dominant span { color: var(--text2); }
+
+  .sent-row { margin-bottom: 9px; }
+
+  .sent-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 3px;
+  }
+
+  .sent-name { font-size: 9px; }
+  .sn-marcus { color: var(--marcus); }
+  .sn-elena { color: var(--elena); }
+  .sn-dev { color: var(--dev); }
+  .sn-zara { color: var(--zara); }
+  .sn-rohan { color: var(--rohan); }
+
+  .sent-score { font-size: 9px; font-weight: 500; }
+  .ss-bull { color: var(--green); }
+  .ss-bear { color: var(--red); }
+  .ss-neut { color: var(--gray); }
+
+  .bar-track {
+    height: 3px;
+    background: var(--bg3);
+    position: relative;
+  }
+
+  .bar-bull {
+    height: 100%;
+    background: var(--green);
+  }
+
+  .bar-bear {
+    height: 100%;
+    background: var(--red);
+    margin-left: auto;
+  }
+
+  .drift-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid #111;
+    font-size: 8px;
+  }
+
+  .dr-name { color: var(--text3); }
+  .dr-vals { color: #333; }
+  .dr-stable { color: var(--green); }
+  .dr-warn { color: var(--yellow); }
+
+  .prob-block { margin-bottom: 8px; }
+
+  .prob-row-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px;
+    margin-bottom: 3px;
+  }
+
+  .prob-key { color: var(--text3); }
+  .prob-val { color: var(--text); font-weight: 500; }
+
+  .prob-track {
+    height: 4px;
+    background: var(--bg3);
+  }
+
+  .pb-bull { background: var(--green); height: 100%; }
+  .pb-base { background: var(--orange); height: 100%; }
+  .pb-bear { background: var(--red); height: 100%; }
+
+  .donut-container {
+    position: relative;
+    height: 120px;
+    margin: 8px 0;
+  }
+
+  .donut-center-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+  }
+  .donut-pct { font-size: 14px; font-weight: 500; color: var(--orange); }
+  .donut-sub { font-size: 7px; color: var(--text3); letter-spacing: 1px; }
+
+  .donut-legend {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 6px;
+  }
+  .dl-item { display: flex; align-items: center; gap: 4px; font-size: 8px; color: var(--text3); }
+  .dl-dot { width: 6px; height: 6px; border-radius: 1px; flex-shrink: 0; }
+
+  /* ─── WHAT-IF ─────────────────────────────────────── */
+  .wi-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 7px;
+  }
+
+  .wi-label { font-size: 8px; color: var(--text3); }
+
+  .wi-input {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    padding: 3px 6px;
+    border-radius: 2px;
+    width: 70px;
+    outline: none;
+    text-align: right;
+  }
+  .wi-input:focus { border-color: var(--orange); }
+
+  .sim-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    padding: 6px;
+    border-radius: 2px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: all 0.15s;
+  }
+  .sim-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+  .sim-result {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 9px;
+    color: var(--text3);
+    line-height: 1.6;
+    margin-top: 8px;
+    font-style: italic;
+    min-height: 40px;
+  }
+
+  .sim-result.active { color: var(--text2); }
+
+  /* ─── EXPORT BTN ─────────────────────────────────── */
+  .export-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    padding: 8px;
+    border-radius: 2px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.15s;
+  }
+  .export-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+  /* ─── RADAR CHART CANVAS ─────────────────────────── */
+  .radar-container { position: relative; height: 130px; margin: 6px 0; }
+
+  /* ─── SEARCH DROPDOWN ───────────────────────────── */
+  .search-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #1a1a1a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .search-item:hover, .search-item.selected {
+    background: #1a0a00;
+    border-left: 2px solid #ff6600;
+  }
+  .search-symbol {
+    font-size: 11px;
+    font-weight: 600;
+    color: #ff6600;
+    letter-spacing: 1px;
+    min-width: 80px;
+  }
+  .search-name {
+    font-size: 9px;
+    color: #888;
+    flex: 1;
+    padding: 0 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .search-exchange {
+    font-size: 8px;
+    color: #444;
+    letter-spacing: 1px;
+  }
+  .search-loading {
+    padding: 10px 12px;
+    font-size: 9px;
+    color: #444;
+    letter-spacing: 1px;
+  }
+
+  /* ─── SCAN LINE EFFECT ───────────────────────────── */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.04) 2px,
+      rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="topbar-left">
+    <div class="logo">ARENA</div>
+    <div class="tagline">ADVERSARIAL REASONING ENGINE FOR NARRATIVE ANALYSIS</div>
+  </div>
+  <div class="topbar-right">
+    <div style="position:relative;">
+      <input class="ticker-pill" id="topbar-ticker"
+        placeholder="Search ticker..."
+        oninput="searchTickersTop(this.value)"
+        onkeydown="handleSearchKeyTop(event)"
+        autocomplete="off" />
+      <div id="search-dropdown-top" style="
+        display:none;
+        position:absolute;
+        top:100%; right:0;
+        width:320px;
+        background:#0d0d0d;
+        border:1px solid #ff6600;
+        border-top:none;
+        z-index:999;
+        max-height:240px;
+        overflow-y:auto;
+      "></div>
+    </div>
+    <button class="run-btn" onclick="startFromTopbar()">INITIATE</button>
+    <div class="clock" id="clock"></div>
+  </div>
+</div>
+
+<!-- APP CONTAINER -->
+<div id="app">
+
+  <!-- LANDING -->
+  <div id="landing" style="display:none;">
+    <div class="land-logo">ARENA</div>
+    <div class="land-sub">FIVE ANALYSTS. ONE STOCK. NO CONSENSUS.</div>
+    <div class="land-input-row" style="flex-direction:column; align-items:center; gap:10px;">
+      <div style="display:flex; gap:10px; align-items:center;">
+        <div style="position:relative;">
+          <input class="land-input" id="land-ticker"
+            placeholder="Search stock name or ticker..."
+            oninput="searchTickers(this.value)"
+            onkeydown="handleSearchKey(event)"
+            autocomplete="off" />
+          <div id="search-dropdown" style="
+            display:none;
+            position:absolute;
+            top:100%; left:0; right:0;
+            background:#0d0d0d;
+            border:1px solid #ff6600;
+            border-top:none;
+            z-index:999;
+            max-height:280px;
+            overflow-y:auto;
+          "></div>
+        </div>
+        <button class="land-run" onclick="startDebate()">INITIATE DEBATE</button>
+      </div>
+    </div>
+    <div class="land-agents">
+      <span class="land-agent m">MARCUS</span>
+      <span class="land-agent" style="color:var(--text3)">·</span>
+      <span class="land-agent e">ELENA</span>
+      <span class="land-agent" style="color:var(--text3)">·</span>
+      <span class="land-agent d">DEV</span>
+      <span class="land-agent" style="color:var(--text3)">·</span>
+      <span class="land-agent z">ZARA</span>
+      <span class="land-agent" style="color:var(--text3)">·</span>
+      <span class="land-agent r">ROHAN</span>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading" style="display:none;">
+    <div class="load-ticker" id="load-ticker-name">AAPL</div>
+    <div class="load-label">ACTIVATING WAR ROOM</div>
+    <div class="progress-track">
+      <div class="progress-fill" id="prog-fill"></div>
+    </div>
+    <div class="load-steps" id="load-steps"></div>
+  </div>
+
+  <!-- DEBATE -->
+  <div id="debate" style="display:none;">
+    <div class="debate-grid">
+      <div class="panel panel-left" id="left-panel"></div>
+      <div class="panel panel-center" id="center-panel"></div>
+      <div class="panel panel-right" id="right-panel"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── DEMO DATA ─────────────────────────────────────────── */
+const DEMO = {
+  ticker: "ETERNAL.NS",
+  company: "Eternal Limited",
+  sector: "Consumer Cyclical · Internet Retail",
+  quality: {
+    score: 75, label: "GOOD", emoji: "🟡",
+    warnings: ["FCF missing — cash generation unknown", "ROE missing — capital efficiency limited", "Insider transaction data unavailable"]
+  },
+  price: { current: "₹252.61", change6m: "-26.28%", high52: "₹354.35", low52: "₹215.68", mcap: "₹2,322B", beta: "0.253", vol: "53.35M" },
+  valuation: { pe: "1010.44", fpe: "115.67", ps: "5.41", pb: "7.61" },
+  growth: { rev: "+2.0%", earn: "+83.3%", gm: "41.8%", om: "-0.4%", fcf: "N/A", roe: "N/A" },
+  risk: { de: "10.875", ibuy: "₹0.00", isell: "₹0.00" },
+  consensus: { target: "₹360.35", upside: "+42.65%", rec: "BUY", score: "1.55/5" },
+  news: [
+    { t: "Blinkit break-even boosts investor confidence", s: "Reuters" },
+    { t: "Goyal steps down as group CEO", s: "Retail Insight" },
+    { t: "Food delivery hit amid LPG crisis", s: "Verdict" },
+    { t: "Goyal's $54M brain-monitoring bet", s: "TechCrunch" },
+    { t: "Swish raises $38M, eyes market share", s: "TechCrunch" },
+  ],
+  conflict: {
+    temperature: "CONTESTED", tempCls: "tb-contested",
+    polar: "HIGHLY POLARIZED",
+    index: "1.775",
+    dominant: "Marcus (Permabull)",
+    agents: [
+      { name: "Marcus", role: "Permabull", score: 0.900, cls: "marcus" },
+      { name: "Elena", role: "Short Seller", score: -0.875, cls: "elena" },
+      { name: "Zara", role: "Quant", score: -0.800, cls: "zara" },
+      { name: "Dev", role: "Behavioral", score: -0.450, cls: "dev" },
+      { name: "Rohan", role: "First-Year", score: 0.225, cls: "rohan" },
+    ],
+    drift: [
+      { name: "Marcus", r1: "+0.90", r2: "+0.90", stable: true },
+      { name: "Elena", r1: "-0.85", r2: "-0.90", stable: true },
+      { name: "Zara", r1: "-0.85", r2: "-0.75", stable: true },
+      { name: "Dev", r1: "-0.45", r2: "-0.45", stable: true },
+      { name: "Rohan", r1: "+0.35", r2: "+0.10", stable: true },
+    ],
+    dataQuality: [75, 80, 60, 55, 70, 85]
+  },
+  verdict: { bull: 25, base: 50, bear: 25 },
+  round1: [
+    { agent: "Marcus", cls: "marcus", role: "Permabull",
+      text: "The bears will fixate on that trailing P/E of 1,010 — and honestly, they're missing the entire story. Earnings grew 83.3% year-over-year. That's not a company in distress, that's a company inflecting toward profitability. The forward P/E of 115 tells you the market already sees this trajectory, and the analyst consensus target of ₹360 implies 42.65% upside. The Blinkit break-even news is exactly the proof point skeptics demanded. This is the playbook we've seen from every dominant platform. Ten years from now, we'll look back at ₹252 as the obvious entry point." },
+    { agent: "Elena", cls: "elena", role: "Short Seller",
+      text: "A defensive compounder does not carry a debt-to-equity of 10.875 while running negative operating margins. That leverage exists because this company cannot fund its ambitions from operations — it borrows to survive. The 83.3% earnings growth? From what base? A trailing P/E of 1,010 means earnings were essentially non-existent. Growing from zero to slightly-above-zero is statistical noise dressed as progress. Meanwhile, revenue grew 2.0%. The business is not expanding — management is slashing costs to manufacture a profitability narrative. Zero insider buying in 90 days. The founder is deploying $54M into brain-monitoring technology instead of his own stock." },
+    { agent: "Dev", cls: "dev", role: "Behavioral Economist",
+      text: "What strikes me is the psychological dissonance: the stock has drifted down 26.28% over six months while analysts scream strong buy with a 42.65% implied upside. Why aren't people listening? Because the zero insider activity over 90 days is the real tell. Complete inaction. When the people with the most information won't bet in either direction, they're telling you something: even they don't know what story to believe. The 42.65% analyst upside persists precisely because abandoning a buy rating requires admitting you were wrong. That's loss aversion dressed in professional clothing." },
+    { agent: "Zara", cls: "zara", role: "Quant",
+      text: "The model flags several concerns. Revenue grew 2.0% year-over-year while operating margin is -0.4%. You cannot compound earnings at 83% when topline barely moves and operations burn cash — this is margin engineering. Debt-to-equity at 10.875 is elevated. Without free cash flow data, I cannot stress-test coverage ratios — this is a critical missing input. Forward P/E of 115.67 versus trailing at 1,010 implies analysts expect 6x earnings expansion. The 0.6% actual growth rate does not support this. ROE is N/A. The model cannot compute return on capital. Any valuation without these inputs is fiction. Pass." },
+    { agent: "Rohan", cls: "rohan", role: "First-Year Analyst",
+      text: "Okay, so the consensus is pretty firmly bullish — buy rating at 1.55 out of 5 and a ₹360 target implying 42.65% upside. And the insider buying of ₹0 with zero selling... feels like management is putting their money where their mouth is? But wait — I'm a little confused. If earnings grew 83.3% but revenue only grew 2.0%... where is the earnings growth actually coming from? And the beta of 0.253 makes sense for a diversified conglomerate. But the debt-to-equity at 10.875 is kind of scary. Is that normal for Indian conglomerates? I genuinely don't know." },
+  ],
+  round2: [
+    { agent: "Marcus", cls: "marcus", role: "Permabull",
+      text: "Elena calls the debt-to-equity alarming, but capital structure tells us nothing about platform dominance. Amazon carried debt for years building the logistics moat. At 41.8% gross margins with Blinkit approaching break-even, the trajectory is clear. And Elena's point about 'zero to slightly-above-zero' misrepresents the Blinkit narrative entirely — one segment reaching profitability is the catalyst, not the conclusion. Zara wants statistical edge? The edge is buying a dominant platform at 71% of its 52-week high while consensus implies 42.65% upside. Sometimes the model is the noise." },
+    { agent: "Elena", cls: "elena", role: "Short Seller",
+      text: "Rohan, 'I'd lean buy because consensus says so' is precisely how retail capital gets harvested by institutional players. Consensus isn't analysis — it's career protection. Analysts don't get fired for being wrong with the crowd. Now — FCF shows N/A. ROE shows N/A. When a company with a ₹2,322B market cap cannot produce these fundamental metrics, the question is not why not — it's what are they hiding? The founder stepping down as group CEO while deploying $54M into brain-monitoring technology is not diversification. That's a tell. The stock is down 26.28% in six months. Sometimes price leads narrative, not the other way around." },
+    { agent: "Dev", cls: "dev", role: "Behavioral Economist",
+      text: "The analyst consensus of ₹360.35 with 42.65% implied upside exists alongside a stock down 26.28%. These same analysts presumably had higher targets six months ago — they've been revising downward, chasing price, experiencing what Kahneman would call insufficient adjustment from an anchor. They started high, they're reluctantly coming down, but haven't confronted whether the original thesis was flawed. And the 14% discount to 52-week high while analysts project 42% upside — that gap represents a disagreement between what people say they believe and what they're actually willing to pay. When I see sell-side optimism diverging this sharply from price action, I ask: who's lying?" },
+    { agent: "Zara", cls: "zara", role: "Quant",
+      text: "Rohan asks whether 10.875 debt-to-equity is normal for Indian conglomerates. This framing is intellectually unrigorous. Normal is not relevant — what matters is whether leverage is sustainable given cash generation. Without FCF, I cannot compute interest coverage or debt service capacity. The absence of this data point is itself a signal. Neither bull nor bear interpretation is supported. Beta of 0.253 is a conglomerate diversification artifact, not a quality signal — it tells me factor exposures are being obscured. The model sees no statistical edge. Pass." },
+    { agent: "Rohan", cls: "rohan", role: "First-Year Analyst",
+      text: "I was just going to say — Zara made this point about forward P/E of 115.67 implying 6x earnings expansion when actual growth is only 0.6%, and that's actually really bothering me now. And Marcus said the Amazon comparison is fair, but Amazon wasn't generating only 2% revenue growth when it was losing money. The consensus is overwhelmingly bullish — strong buy, ₹360 target — but the price has done nothing for six months. So either the Street is early, or they're wrong. I genuinely don't know which is worse. I think I need more data before I'd be confident either way." },
+  ],
+  synthesis: {
+    text: "All five analysts implicitly acknowledge one critical observation: 2.0% revenue growth producing 83.3% earnings growth is anomalous and demands explanation. The core irreducible disagreement: is the negative 0.4% operating margin an inflection point or a warning sign? Marcus believes the Jio and retail buildout will produce Amazon-like operating leverage. Elena sees no evidence of segment-level margin improvement to support this thesis. Neither can definitively prove their case because the segment data does not exist in this briefing.",
+    vars: ["Revenue acceleration beyond 2.0% in coming quarters", "Whether Blinkit break-even translates to consolidated positive operating margin", "FCF and ROE data once disclosed — validates or invalidates the growth thesis"],
+    uq: "If management truly believes in this inflection, why has insider buying remained at exactly zero over 90 days while the stock trades 26.28% below its high?"
+  }
+};
+
+/* ── STEPS ──────────────────────────────────────────────── */
+const STEPS = [
+  "Fetching market intelligence...",
+  "Scraping SEC / EDGAR filings...",
+  "Building Goldman-style briefing...",
+  "Marcus forming bull thesis...",
+  "Elena identifying risk signals...",
+  "Dev reading market psychology...",
+  "Zara running the quant model...",
+  "Rohan checking Street consensus...",
+  "Cross-examination in progress...",
+  "Computing conflict scores...",
+  "Synthesizer delivering verdict..."
+];
+
+/* ── CLOCK ──────────────────────────────────────────────── */
+function updateClock() {
+  const now = new Date();
+  const utc = now.toUTCString();
+  document.getElementById('clock').textContent = utc.slice(5, 11) + ' ' + utc.slice(17, 25) + ' UTC';
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ── NAVIGATION ─────────────────────────────────────────── */
+function show(id) {
+  document.getElementById('landing').style.display = id === 'landing' ? 'flex' : 'none';
+  document.getElementById('loading').style.display = id === 'loading' ? 'flex' : 'none';
+  document.getElementById('debate').style.display  = id === 'debate'  ? 'block' : 'none';
+}
+
+function startDebate() {
+  const t = document.getElementById('land-ticker').value.trim().toUpperCase();
+  if (!t) return;
+  launchDebate(t);
+}
+
+function startFromTopbar() {
+  const t = document.getElementById('topbar-ticker').value.trim().toUpperCase();
+  if (!t) return;
+  launchDebate(t);
+}
+
+function launchDebate(ticker) {
+  show('loading');
+  document.getElementById('load-ticker-name').textContent = ticker;
+
+  let loadingDone = false;
+  let apiDone = false;
+  let apiData = null;
+
+  runLoading(() => {
+    loadingDone = true;
+    if (apiDone) populateAndShow(apiData);
+  });
+
+  const timeout = setTimeout(() => {
+    if (!apiDone) {
+      document.getElementById('load-ticker-name').textContent = 'TIMEOUT — TRY AGAIN';
+      document.getElementById('load-ticker-name').style.color = '#ff3b3b';
+    }
+  }, 300000); // 5 min timeout
+
+  fetch('/api/debate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ticker: ticker })
+  })
+  .then(res => res.json())
+  .then(data => {
+    clearTimeout(timeout);
+    apiData = data;
+    apiDone = true;
+    if (loadingDone) populateAndShow(data);
+  })
+  .catch(err => {
+    clearTimeout(timeout);
+    console.error('API error:', err);
+    document.getElementById('load-ticker-name').textContent = 'ERROR — CHECK TERMINAL';
+    document.getElementById('load-ticker-name').style.color = '#ff3b3b';
+  });
+}
+
+function populateAndShow(data) {
+  if (data.error) {
+    alert('Error: ' + data.error);
+    show('landing');
+    return;
+  }
+  buildDemoFromAPI(data);
+  show('debate');
+  renderAll();
+}
+
+function buildDemoFromAPI(data) {
+  const conflict = data.conflict;
+  const validation = data.validation;
+
+  // Parse briefing sections from the formatted text
+  const b = parseBriefing(data.briefing);
+
+  DEMO.ticker = data.ticker;
+  DEMO.company = data.company_name;
+
+  // Quality
+  DEMO.quality.score = validation.score;
+  DEMO.quality.label = validation.quality;
+  DEMO.quality.emoji = validation.quality_emoji;
+  DEMO.quality.warnings = validation.warnings || [];
+
+  // Price
+  DEMO.price.current = b.current_price || 'N/A';
+  DEMO.price.change6m = b.price_change_6m || 'N/A';
+  DEMO.price.high52 = b.week_52_high || 'N/A';
+  DEMO.price.low52 = b.week_52_low || 'N/A';
+  DEMO.price.mcap = b.market_cap || 'N/A';
+  DEMO.price.beta = b.beta || 'N/A';
+  DEMO.price.vol = b.avg_volume || 'N/A';
+
+  // Valuation
+  DEMO.valuation.pe = b.trailing_pe || 'N/A';
+  DEMO.valuation.fpe = b.forward_pe || 'N/A';
+  DEMO.valuation.ps = b.price_sales || 'N/A';
+  DEMO.valuation.pb = b.price_book || 'N/A';
+
+  // Growth
+  DEMO.growth.rev = b.revenue_growth || 'N/A';
+  DEMO.growth.earn = b.earnings_growth || 'N/A';
+  DEMO.growth.gm = b.gross_margin || 'N/A';
+  DEMO.growth.om = b.operating_margin || 'N/A';
+  DEMO.growth.fcf = b.free_cash_flow || 'N/A';
+  DEMO.growth.roe = b.return_on_equity || 'N/A';
+
+  // Risk
+  DEMO.risk.de = b.debt_equity || 'N/A';
+  DEMO.risk.ibuy = b.insider_bought || 'N/A';
+  DEMO.risk.isell = b.insider_sold || 'N/A';
+
+  // Consensus
+  DEMO.consensus.target = b.consensus_target || 'N/A';
+  DEMO.consensus.upside = b.implied_upside || 'N/A';
+  DEMO.consensus.rec = b.recommendation || 'N/A';
+  DEMO.consensus.score = b.rec_score || 'N/A';
+
+  // News
+  DEMO.news = parseNews(data.briefing);
+
+  // Debate rounds
+  DEMO.round1 = data.round1.map(r => ({
+    agent: r.agent.split(' ')[0],
+    cls: agentCls(r.agent),
+    role: agentRole(r.agent),
+    text: r.response
+  }));
+
+  DEMO.round2 = data.round2.map(r => ({
+    agent: r.agent.split(' ')[0],
+    cls: agentCls(r.agent),
+    role: agentRole(r.agent),
+    text: r.response
+  }));
+
+  // Synthesis
+  DEMO.synthesis.text = data.synthesis;
+  DEMO.synthesis.vars = [];
+  DEMO.synthesis.uq = extractUnanswered(data.synthesis);
+
+  // Conflict
+  const agentScores = conflict.agent_scores || {};
+  const drift = conflict.drift || {};
+
+  DEMO.conflict.temperature = conflict.debate_temperature || 'CONTESTED';
+  DEMO.conflict.tempCls = tempClass(conflict.debate_temperature);
+  DEMO.conflict.polar = conflict.polarization_label || 'N/A';
+  DEMO.conflict.index = String(conflict.polarization_index || 'N/A');
+  DEMO.conflict.dominant = conflict.dominant_voice || 'N/A';
+
+  DEMO.conflict.agents = Object.entries(agentScores).map(([name, score]) => ({
+    name: name.split(' ')[0],
+    role: agentRole(name),
+    score: score,
+    cls: agentCls(name)
+  }));
+
+  DEMO.conflict.drift = Object.entries(drift).map(([name, d]) => ({
+    name: name.split(' ')[0],
+    r1: (d.r1 >= 0 ? '+' : '') + d.r1.toFixed(2),
+    r2: (d.r2 >= 0 ? '+' : '') + d.r2.toFixed(2),
+    stable: !d.drifted
+  }));
+
+  // Verdict from synthesis text
+  const bullMatch = data.synthesis.match(/[Bb]ull\s*(?:case)?\s*[:\-]?\s*\*?\*?(\d+)%/);
+  const baseMatch = data.synthesis.match(/[Bb]ase\s*(?:case)?\s*[:\-]?\s*\*?\*?(\d+)%/);
+  const bearMatch = data.synthesis.match(/[Bb]ear\s*(?:case)?\s*[:\-]?\s*\*?\*?(\d+)%/);
+  DEMO.verdict.bull = bullMatch ? parseInt(bullMatch[1]) : 25;
+  DEMO.verdict.base = baseMatch ? parseInt(baseMatch[1]) : 50;
+  DEMO.verdict.bear = bearMatch ? parseInt(bearMatch[1]) : 25;
+}
+
+function parseBriefing(text) {
+  const result = {};
+  const lines = text.split('\n');
+  lines.forEach(line => {
+    const extract = (key, label) => {
+      if (line.includes(label)) {
+        const val = line.split(':').slice(1).join(':').trim();
+        if (val) result[key] = val;
+      }
+    };
+    extract('current_price', 'Current Price:');
+    extract('price_change_6m', '6M Price Change:');
+    extract('week_52_high', '52W High:');
+    extract('week_52_low', '52W Low:');
+    extract('market_cap', 'Market Cap:');
+    extract('beta', 'Beta:');
+    extract('avg_volume', 'Avg Volume');
+    extract('trailing_pe', 'Trailing P/E:');
+    extract('forward_pe', 'Forward P/E:');
+    extract('price_sales', 'Price/Sales:');
+    extract('price_book', 'Price/Book:');
+    extract('revenue_growth', 'Revenue Growth YoY:');
+    extract('earnings_growth', 'Earnings Growth:');
+    extract('gross_margin', 'Gross Margin:');
+    extract('operating_margin', 'Operating Margin:');
+    extract('free_cash_flow', 'Free Cash Flow:');
+    extract('return_on_equity', 'Return on Equity:');
+    extract('debt_equity', 'Debt/Equity:');
+    extract('insider_bought', 'Insider Bought:');
+    extract('insider_sold', 'Insider Sold:');
+    extract('consensus_target', 'Consensus Target:');
+    extract('implied_upside', 'Implied Upside:');
+    extract('recommendation', 'Recommendation:');
+    extract('rec_score', 'Recommendation Score:');
+  });
+  return result;
+}
+
+function parseNews(briefing) {
+  const news = [];
+  const lines = briefing.split('\n');
+  lines.forEach(line => {
+    const m = line.match(/\[(\d+)\]\s+(.+?)\s+—\s+(.+)/);
+    if (m) news.push({ t: m[2], s: m[3] });
+  });
+  return news.length ? news : [{ t: 'No recent news available', s: '' }];
+}
+
+function extractUnanswered(synthesis) {
+  const lines = synthesis.split('\n');
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const l = lines[i].trim();
+    if (l.includes('?') && l.length > 20) return l.replace(/\*\*/g, '');
+  }
+  return '';
+}
+
+function agentCls(name) {
+  const n = name.toLowerCase();
+  if (n.includes('marcus') || n.includes('permabull')) return 'marcus';
+  if (n.includes('elena') || n.includes('short')) return 'elena';
+  if (n.includes('dev') || n.includes('behavioral')) return 'dev';
+  if (n.includes('zara') || n.includes('quant')) return 'zara';
+  if (n.includes('rohan') || n.includes('first')) return 'rohan';
+  return 'marcus';
+}
+
+function agentRole(name) {
+  const n = name.toLowerCase();
+  if (n.includes('marcus') || n.includes('permabull')) return 'Permabull';
+  if (n.includes('elena') || n.includes('short')) return 'Short Seller';
+  if (n.includes('dev') || n.includes('behavioral')) return 'Behavioral';
+  if (n.includes('zara') || n.includes('quant')) return 'Quant';
+  if (n.includes('rohan') || n.includes('first')) return 'First-Year';
+  return 'Analyst';
+}
+
+function tempClass(temp) {
+  if (!temp) return 'tb-contested';
+  if (temp.includes('BULL')) return 'tb-bull';
+  if (temp.includes('BEAR')) return 'tb-bear';
+  return 'tb-contested';
+}
+
+/* ── TICKER SEARCH ──────────────────────────────────────── */
+let searchTimeout = null;
+let selectedIndex = -1;
+let currentResults = [];
+
+function searchTickers(query) {
+  const dropdown = document.getElementById('search-dropdown');
+  selectedIndex = -1;
+  if (!query || query.length < 2) {
+    dropdown.style.display = 'none';
+    return;
+  }
+  clearTimeout(searchTimeout);
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = '<div class="search-loading">SEARCHING...</div>';
+  searchTimeout = setTimeout(() => {
+    fetch(`/api/search?q=${encodeURIComponent(query)}`)
+      .then(r => r.json())
+      .then(data => {
+        currentResults = data.results || [];
+        if (currentResults.length === 0) {
+          dropdown.innerHTML = '<div class="search-loading">NO RESULTS FOUND</div>';
+          return;
+        }
+        dropdown.innerHTML = currentResults.map((r, i) =>
+          `<div class="search-item" onclick="selectTicker('${r.symbol}','land')" onmouseover="selectedIndex=${i}">
+            <span class="search-symbol">${r.symbol}</span>
+            <span class="search-name">${r.name}</span>
+            <span class="search-exchange">${r.exchange}</span>
+          </div>`
+        ).join('');
+      })
+      .catch(() => {
+        dropdown.innerHTML = '<div class="search-loading">SEARCH ERROR</div>';
+      });
+  }, 300);
+}
+
+function searchTickersTop(query) {
+  const dropdown = document.getElementById('search-dropdown-top');
+  selectedIndex = -1;
+  if (!query || query.length < 2) {
+    dropdown.style.display = 'none';
+    return;
+  }
+  clearTimeout(searchTimeout);
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = '<div class="search-loading">SEARCHING...</div>';
+  searchTimeout = setTimeout(() => {
+    fetch(`/api/search?q=${encodeURIComponent(query)}`)
+      .then(r => r.json())
+      .then(data => {
+        currentResults = data.results || [];
+        if (currentResults.length === 0) {
+          dropdown.innerHTML = '<div class="search-loading">NO RESULTS FOUND</div>';
+          return;
+        }
+        dropdown.innerHTML = currentResults.map((r, i) =>
+          `<div class="search-item" onclick="selectTicker('${r.symbol}','top')">
+            <span class="search-symbol">${r.symbol}</span>
+            <span class="search-name">${r.name}</span>
+            <span class="search-exchange">${r.exchange}</span>
+          </div>`
+        ).join('');
+      })
+      .catch(() => {
+        dropdown.innerHTML = '<div class="search-loading">SEARCH ERROR</div>';
+      });
+  }, 300);
+}
+
+function selectTicker(symbol, source) {
+  if (source === 'land') {
+    document.getElementById('land-ticker').value = symbol;
+    document.getElementById('search-dropdown').style.display = 'none';
+  } else {
+    document.getElementById('topbar-ticker').value = symbol;
+    document.getElementById('search-dropdown-top').style.display = 'none';
+  }
+}
+
+function handleSearchKey(event) {
+  const dropdown = document.getElementById('search-dropdown');
+  const items = dropdown.querySelectorAll('.search-item');
+  if (event.key === 'ArrowDown') {
+    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('selected', i === selectedIndex));
+    event.preventDefault();
+  } else if (event.key === 'ArrowUp') {
+    selectedIndex = Math.max(selectedIndex - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('selected', i === selectedIndex));
+    event.preventDefault();
+  } else if (event.key === 'Enter') {
+    if (selectedIndex >= 0 && currentResults[selectedIndex]) {
+      selectTicker(currentResults[selectedIndex].symbol, 'land');
+    } else {
+      startDebate();
+    }
+  } else if (event.key === 'Escape') {
+    dropdown.style.display = 'none';
+  }
+}
+
+function handleSearchKeyTop(event) {
+  if (event.key === 'Enter') startFromTopbar();
+  if (event.key === 'Escape') {
+    document.getElementById('search-dropdown-top').style.display = 'none';
+  }
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#land-ticker') && !e.target.closest('#search-dropdown')) {
+    const d = document.getElementById('search-dropdown');
+    if (d) d.style.display = 'none';
+  }
+  if (!e.target.closest('#topbar-ticker') && !e.target.closest('#search-dropdown-top')) {
+    const d = document.getElementById('search-dropdown-top');
+    if (d) d.style.display = 'none';
+  }
+});
+/* ── INIT ───────────────────────────────────────────────── */
+show('landing');
+
+/* ── LOADING SEQUENCE ───────────────────────────────────── */
+function runLoading(cb) {
+  const stepsEl = document.getElementById('load-steps');
+  const prog = document.getElementById('prog-fill');
+  stepsEl.innerHTML = '';
+  const els = STEPS.map((s) => {
+    const div = document.createElement('div');
+    div.className = 'load-step';
+    div.innerHTML = `<div class="step-dot"></div><span>${s}</span>`;
+    stepsEl.appendChild(div);
+    return div;
+  });
+  let cur = 0;
+  function next() {
+    if (cur > 0) els[cur - 1].className = 'load-step done';
+    if (cur < els.length) {
+      els[cur].className = 'load-step active';
+      prog.style.width = ((cur + 1) / STEPS.length * 100) + '%';
+      cur++;
+      setTimeout(next, 300 + Math.random() * 250);
+    } else {
+      setTimeout(cb, 300);
+    }
+  }
+  next();
+}
+
+/* ── RENDER LEFT PANEL ──────────────────────────────────── */
+function renderLeft() {
+  const d = DEMO;
+  const el = document.getElementById('left-panel');
+  const isNeg = v => v && (v.toString().startsWith('-') || v.toString().includes('-'));
+  const isNA = v => !v || v === 'N/A';
+
+  function dvClass(val, forceWarn) {
+    if (isNA(val)) return 'dv na';
+    if (forceWarn) return 'dv warn';
+    if (isNeg(val)) return 'dv neg';
+    return 'dv pos';
+  }
+
+  let h = `
+    <div class="instrument-name">${d.ticker}</div>
+    <div class="instrument-co">${d.company}</div>
+    <div style="font-size:8px; color:var(--text3); margin-top:2px;">${d.sector || ''}</div>
+    <div style="margin-top:8px;">
+      <div class="quality-chip">${d.quality.emoji}&nbsp;DATA QUALITY&nbsp;${d.quality.score}/100</div>
+    </div>
+    ${d.quality.warnings.map(w => `<div class="warn-item"><span class="warn-dot">▸</span>${w}</div>`).join('')}
+
+    <span class="sec-label">PRICE</span>
+    <div class="data-row"><span class="dk">CURRENT</span><span class="dv">${d.price.current}</span></div>
+    <div class="data-row"><span class="dk">6M CHG</span><span class="${dvClass(d.price.change6m)}">${d.price.change6m}</span></div>
+    <div class="data-row"><span class="dk">52W HIGH</span><span class="dv">${d.price.high52}</span></div>
+    <div class="data-row"><span class="dk">52W LOW</span><span class="dv">${d.price.low52}</span></div>
+    <div class="data-row"><span class="dk">MKT CAP</span><span class="dv">${d.price.mcap}</span></div>
+    <div class="data-row"><span class="dk">BETA</span><span class="dv">${d.price.beta}</span></div>
+    <div class="data-row"><span class="dk">AVG VOL</span><span class="dv">${d.price.vol}</span></div>
+
+    <span class="sec-label">VALUATION</span>
+    <div class="data-row"><span class="dk">P/E (TTM)</span><span class="${dvClass(d.valuation.pe, true)}">${d.valuation.pe}</span></div>
+    <div class="data-row"><span class="dk">P/E (FWD)</span><span class="dv">${d.valuation.fpe}</span></div>
+    <div class="data-row"><span class="dk">P/SALES</span><span class="dv">${d.valuation.ps}</span></div>
+    <div class="data-row"><span class="dk">P/BOOK</span><span class="dv">${d.valuation.pb}</span></div>
+
+    <span class="sec-label">GROWTH & PROFITABILITY</span>
+    <div class="data-row"><span class="dk">REV YOY</span><span class="${dvClass(d.growth.rev)}">${d.growth.rev}</span></div>
+    <div class="data-row"><span class="dk">EARN YOY</span><span class="${dvClass(d.growth.earn)}">${d.growth.earn}</span></div>
+    <div class="data-row"><span class="dk">GROSS MGN</span><span class="${dvClass(d.growth.gm)}">${d.growth.gm}</span></div>
+    <div class="data-row"><span class="dk">OP MGN</span><span class="${dvClass(d.growth.om)}">${d.growth.om}</span></div>
+    <div class="data-row"><span class="dk">FREE CF</span><span class="${isNA(d.growth.fcf) ? 'dv na' : 'dv'}">${d.growth.fcf}</span></div>
+    <div class="data-row"><span class="dk">ROE</span><span class="${isNA(d.growth.roe) ? 'dv na' : 'dv'}">${d.growth.roe}</span></div>
+
+    <span class="sec-label">RISK SIGNALS</span>
+    <div class="data-row"><span class="dk">DEBT/EQ</span><span class="dv warn">${d.risk.de}</span></div>
+    <div class="data-row"><span class="dk">INSIDER BUY</span><span class="dv">${d.risk.ibuy}</span></div>
+    <div class="data-row"><span class="dk">INSIDER SELL</span><span class="dv">${d.risk.isell}</span></div>
+
+    <span class="sec-label">ANALYST CONSENSUS</span>
+    <div class="data-row"><span class="dk">TARGET</span><span class="dv pos">${d.consensus.target}</span></div>
+    <div class="data-row"><span class="dk">UPSIDE</span><span class="${dvClass(d.consensus.upside)}">${d.consensus.upside}</span></div>
+    <div class="data-row"><span class="dk">RATING</span><span class="dv pos">${d.consensus.rec}</span></div>
+    <div class="data-row"><span class="dk">SCORE</span><span class="dv">${d.consensus.score}</span></div>
+
+    <span class="sec-label">RECENT NEWS</span>
+    ${d.news.map(n => `<div class="news-row">${n.t} <span class="news-src">— ${n.s}</span></div>`).join('')}
+  `;
+  el.innerHTML = h;
+}
+
+/* ── RENDER CENTER PANEL ────────────────────────────────── */
+function renderCenter() {
+  const d = DEMO;
+  const el = document.getElementById('center-panel');
+
+  function card(a, round) {
+    return `<div class="agent-card">
+      <div class="agent-gutter gutter-${a.cls}"></div>
+      <div class="agent-body">
+        <div class="agent-header">
+          <div class="agent-name-tag name-${a.cls}">${a.agent.toUpperCase()}</div>
+          <div class="agent-role-tag">${round === 2 ? 'RESPONDING' : a.role.toUpperCase()}</div>
+        </div>
+        <div class="agent-text">${a.text}</div>
+      </div>
+    </div>`;
+  }
+
+  let h = `<div class="round-divider">ROUND 1 — OPENING POSITIONS</div>`;
+  d.round1.forEach(a => h += card(a, 1));
+
+  h += `<div class="round-divider">ROUND 2 — CROSS EXAMINATION</div>`;
+  d.round2.forEach(a => h += card(a, 2));
+
+  h += `<div class="round-divider">FINAL SYNTHESIS</div>`;
+  h += `<div class="agent-card">
+    <div class="agent-gutter gutter-synth"></div>
+    <div class="agent-body">
+      <div class="agent-header">
+        <div class="agent-name-tag name-synth">MODERATOR</div>
+        <div class="agent-role-tag">SYNTHESIS</div>
+      </div>
+      <div class="agent-text">${d.synthesis.text}</div>
+      ${d.synthesis.vars && d.synthesis.vars.length ? `
+        <div style="margin-top:10px; font-size:9px; color:var(--text3); letter-spacing:1px;">KEY VARIABLES</div>
+        ${d.synthesis.vars.map((v, i) => `<div style="font-size:9px; color:var(--text3); padding:2px 0;">${i+1}. ${v}</div>`).join('')}
+      ` : ''}
+      ${d.synthesis.uq ? `<div class="synth-uq">"${d.synthesis.uq}"</div>` : ''}
+    </div>
+  </div>`;
+
+  el.innerHTML = h;
+}
+
+/* ── RENDER RIGHT PANEL ─────────────────────────────────── */
+function renderRight() {
+  const d = DEMO;
+  const el = document.getElementById('right-panel');
+
+  function colorOf(cls) {
+    return { marcus:'#00c176', elena:'#ff3b3b', dev:'#4a9eff', zara:'#888888', rohan:'#ffcc00' }[cls] || '#888';
+  }
+
+  function scoreClass(s) {
+    return s > 0.2 ? 'ss-bull' : s < -0.2 ? 'ss-bear' : 'ss-neut';
+  }
+
+  const sentRows = d.conflict.agents.map(a => {
+    const pct = Math.round(Math.abs(a.score) * 100);
+    const isBull = a.score >= 0;
+    const col = colorOf(a.cls);
+    return `<div class="sent-row">
+      <div class="sent-meta">
+        <span class="sent-name sn-${a.cls}">${a.name}</span>
+        <span class="sent-score ${scoreClass(a.score)}">${a.score > 0 ? '+' : ''}${Number(a.score).toFixed(3)}</span>
+      </div>
+      <div class="bar-track">
+        ${isBull
+          ? `<div class="bar-bull" style="width:${pct}%; background:${col};"></div>`
+          : `<div class="bar-bear" style="width:${pct}%; background:${col};"></div>`}
+      </div>
+    </div>`;
+  }).join('');
+
+  const driftRows = d.conflict.drift.map(dr => `
+    <div class="drift-row">
+      <span class="dr-name">${dr.name}</span>
+      <span class="dr-vals">${dr.r1}→${dr.r2}</span>
+      <span class="${dr.stable ? 'dr-stable' : 'dr-warn'}">${dr.stable ? 'STABLE' : 'DRIFT'}</span>
+    </div>
+  `).join('');
+
+  let h = `
+    <span class="sec-label">DEBATE TEMPERATURE</span>
+    <div class="temp-badge ${d.conflict.tempCls}">${d.conflict.temperature}</div><br>
+    <div class="polar-badge">${d.conflict.polar}</div>
+    <div class="polar-index">POLARIZATION INDEX: ${d.conflict.index}</div>
+    <div class="dominant">DOMINANT VOICE: <span>${d.conflict.dominant}</span></div>
+
+    <span class="sec-label">SENTIMENT SPECTRUM</span>
+    ${sentRows}
+
+    <span class="sec-label">VERDICT PROBABILITY</span>
+    <div class="donut-container">
+      <canvas id="donutChart" role="img" aria-label="Verdict probability donut chart">Bull ${d.verdict.bull}%, Base ${d.verdict.base}%, Bear ${d.verdict.bear}%</canvas>
+      <div class="donut-center-label">
+        <div class="donut-pct">${d.verdict.base}%</div>
+        <div class="donut-sub">BASE</div>
+      </div>
+    </div>
+    <div class="donut-legend">
+      <div class="dl-item"><div class="dl-dot" style="background:#00c176"></div>Bull ${d.verdict.bull}%</div>
+      <div class="dl-item"><div class="dl-dot" style="background:#ff6600"></div>Base ${d.verdict.base}%</div>
+      <div class="dl-item"><div class="dl-dot" style="background:#ff3b3b"></div>Bear ${d.verdict.bear}%</div>
+    </div>
+
+    <span class="sec-label">DATA QUALITY RADAR</span>
+    <div class="radar-container">
+      <canvas id="radarChart" role="img" aria-label="Data quality radar">Price, Valuation, Growth, Risk, Consensus, News</canvas>
+    </div>
+
+    <span class="sec-label">DRIFT DETECTION</span>
+    ${driftRows}
+
+    <span class="sec-label">WHAT-IF SIMULATION</span>
+    <div>
+      <div class="wi-row">
+        <span class="wi-label">REV GROWTH %</span>
+        <input class="wi-input" id="wi-rev" type="number" value="2" step="1" />
+      </div>
+      <div class="wi-row">
+        <span class="wi-label">OP MARGIN %</span>
+        <input class="wi-input" id="wi-om" type="number" value="-0.4" step="0.5" />
+      </div>
+      <div class="wi-row">
+        <span class="wi-label">DEBT/EQUITY</span>
+        <input class="wi-input" id="wi-de" type="number" value="10.875" step="1" />
+      </div>
+      <button class="sim-btn" onclick="runSimulation()">▸ RUN SIMULATION</button>
+      <div class="sim-result" id="sim-result">Adjust variables above and simulate how verdict shifts.</div>
+    </div>
+    <button class="export-btn" id="export-btn" onclick="exportPDF()">▸ EXPORT SESSION AS PDF</button>
+  `;
+
+  el.innerHTML = h;
+
+  setTimeout(() => {
+    const donutCtx = document.getElementById('donutChart');
+    if (donutCtx) {
+      new Chart(donutCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Bull', 'Base', 'Bear'],
+          datasets: [{
+            data: [d.verdict.bull, d.verdict.base, d.verdict.bear],
+            backgroundColor: ['#00c176', '#ff6600', '#ff3b3b'],
+            borderWidth: 0,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` } }
+          }
+        }
+      });
+    }
+
+    const radarCtx = document.getElementById('radarChart');
+    if (radarCtx) {
+      new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+          labels: ['Price', 'Valuation', 'Growth', 'Risk', 'Consensus', 'News'],
+          datasets: [{
+            data: d.conflict.dataQuality || [75, 80, 60, 55, 70, 85],
+            backgroundColor: 'rgba(255,102,0,0.12)',
+            borderColor: '#ff6600',
+            borderWidth: 1,
+            pointBackgroundColor: '#ff6600',
+            pointRadius: 2,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            r: {
+              min: 0, max: 100,
+              ticks: { display: false },
+              grid: { color: '#1a1a1a' },
+              angleLines: { color: '#1a1a1a' },
+              pointLabels: {
+                font: { family: 'IBM Plex Mono', size: 8 },
+                color: '#444'
+              }
+            }
+          }
+        }
+      });
+    }
+  }, 50);
+}
+
+/* ── RENDER ALL ─────────────────────────────────────────── */
+function renderAll() {
+  renderLeft();
+  renderCenter();
+  renderRight();
+}
+
+/* ── SIMULATION ─────────────────────────────────────────── */
+function runSimulation() {
+  const rev = parseFloat(document.getElementById('wi-rev').value) || 2;
+  const om = parseFloat(document.getElementById('wi-om').value) || -0.4;
+  const de = parseFloat(document.getElementById('wi-de').value) || 10;
+  const el = document.getElementById('sim-result');
+  el.className = 'sim-result active';
+
+  let bull, base, bear, msg;
+  if (rev > 20 && om > 5) {
+    bull = 65; base = 25; bear = 10;
+    msg = `Revenue surge + margin inflection. Bull case at ${bull}%. Elena's thesis collapses. Marcus vindicated.`;
+  } else if (rev > 15) {
+    bull = 45; base = 40; bear = 15;
+    msg = `Revenue acceleration shifts balance. Bull ${bull}% / Base ${base}% / Bear ${bear}%. Zara turns constructive.`;
+  } else if (rev > 8 && om > 0) {
+    bull = 40; base = 45; bear = 15;
+    msg = `Improving fundamentals. Bull case strengthens to ${bull}%. Elena still cites leverage risk.`;
+  } else if (om < -8) {
+    bull = 8; base = 27; bear = 65;
+    msg = `Margin deterioration confirms Elena. Bear ${bear}%. Debt-to-equity of ${de} becomes existential.`;
+  } else if (rev < 0) {
+    bull = 5; base = 22; bear = 73;
+    msg = `Negative revenue growth is terminal for the bull case. Bear ${bear}%. Marcus's thesis collapses.`;
+  } else if (de > 20) {
+    bull = 12; base = 33; bear = 55;
+    msg = `Leverage spike triggers Elena and Zara. Bear case surges to ${bear}%. Debt service becomes dominant concern.`;
+  } else {
+    bull = 25; base = 50; bear = 25;
+    msg = `Variables near current levels. Base case unchanged. Core fault line remains unresolved.`;
+  }
+  el.textContent = `Bull ${bull}% / Base ${base}% / Bear ${bear}% — ${msg}`;
+}
+
+/* ── EXPORT ─────────────────────────────────────────────── */
+function exportPDF() {
+  const btn = document.getElementById('export-btn');
+  btn.textContent = '▸ GENERATING PDF...';
+  btn.style.borderColor = '#ff6600';
+  btn.style.color = '#ff6600';
+
+  fetch('/api/export', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{}'
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('Export failed');
+    return res.blob();
+  })
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ARENA_${DEMO.ticker}_${Date.now()}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    btn.textContent = '▸ PDF DOWNLOADED';
+    btn.style.borderColor = '#00c176';
+    btn.style.color = '#00c176';
+    setTimeout(() => {
+      btn.textContent = '▸ EXPORT SESSION AS PDF';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }, 3000);
+  })
+  .catch(err => {
+    console.error(err);
+    btn.textContent = '▸ EXPORT FAILED';
+    btn.style.borderColor = '#ff3b3b';
+    btn.style.color = '#ff3b3b';
+    setTimeout(() => {
+      btn.textContent = '▸ EXPORT SESSION AS PDF';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }, 3000);
+  });
+}
+
+</script>
+</body>
+</html>
