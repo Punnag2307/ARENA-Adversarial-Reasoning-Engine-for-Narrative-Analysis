@@ -6,7 +6,6 @@
 ARENA is a multi-agent financial debate system that takes any stock ticker and generates a structured adversarial debate between five AI analysts — each with a distinct mental model, blind spot, and voice. It's not one AI opinion. It's a room full of disagreeing experts.
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.x-red)
 ![Claude AI](https://img.shields.io/badge/Claude-Sonnet-orange)
 
 ---
