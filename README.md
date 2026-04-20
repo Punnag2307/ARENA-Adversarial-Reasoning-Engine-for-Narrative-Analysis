@@ -3,7 +3,7 @@
 
 > *Five analysts. One stock. No consensus.*
 
-ARENA is a multi-agent financial debate system that takes any stock ticker and generates a structured adversarial debate between five AI analysts — each with a distinct mental model, blind spot, and voice. It's not one AI opinion. It's a room full of disagreeing experts, and you built all of them.
+ARENA is a multi-agent financial debate system that takes any stock ticker and generates a structured adversarial debate between five AI analysts — each with a distinct mental model, blind spot, and voice. It's not one AI opinion. It's a room full of disagreeing experts.
 
 ---
 
@@ -28,7 +28,7 @@ After two rounds of cross-examination, a Moderator synthesizes the debate into a
 
 ```
 ARENA — ETERNAL.NS (Eternal Limited)
-Data Quality: 🟡 GOOD (75/100) | Temperature: ⚔️ CONTESTED | Polarization: 🔥 HIGHLY POLARIZED
+Data Quality: GOOD (75/100) | Temperature: CONTESTED | Polarization: HIGHLY POLARIZED
 
 MARCUS  +0.900  ████████████████████
 ELENA   -0.875  ████████████████████
@@ -105,7 +105,7 @@ FastAPI → Bloomberg-style Web UI
 ### Prerequisites
 - Python 3.10+
 - Anthropic API key
-- Alpha Vantage API key (free at alphavantage.co)
+- Alpha Vantage API key
 
 ### Installation
 
